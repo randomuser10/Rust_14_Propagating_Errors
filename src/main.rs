@@ -3,7 +3,7 @@
 // where there might be more information or logic that dictates how the error should be handled than what you have available in the context of your code.
 
 use std::fs::File;
-use std::io::{self, Read};
+use std::io::{self,ErrorKind, Read};
 
 //create a function which returns error if something goes wrong
 fn read_username_from_file(file_name: &str) -> Result<String, io::Error> {
@@ -13,7 +13,15 @@ fn read_username_from_file(file_name: &str) -> Result<String, io::Error> {
 
     let mut user_name_file = match username_file_result {
         Ok(file) => file,
-        Err(error) => return Err(error),        
+        Err(error) => match error.kind() {
+            ErrorKind::NotFound => match File::create("hello.txt") {
+                Ok(fs) => fs,
+                Err(e) => return Err(e),
+                
+            },
+            _ => panic!("Failed to create file"),
+            
+        },        
     };
     match user_name_file.read_to_string(&mut user_name) {
         Ok(_) => Ok(user_name),
